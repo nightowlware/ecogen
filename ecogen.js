@@ -71,6 +71,97 @@ class Token {
 
 
 class Lexer {
-  constructor() {
+  constructor(scanner) {
+    this.scanner = scanner;
+  }
+
+  lex() {
+    let tokens = [];
+    let token = new Token();
+
+    let c = this.scanner.next();
+
+    while (c) {
+
+      if (!token.type) {
+        if (c.char === '$') {
+          token.type = TOKEN_JS_LINE;
+          c = this.scanner.next();
+          while (c.char === ' ') {
+            c = this.scanner.next();
+          }
+        } else {
+          token.type = TOKEN_JS_CHUNK;
+        }
+        token.row = c.row;
+        token.col = c.col;
+      }
+
+      else if (token.type === TOKEN_JS_CHUNK) {
+        if (c.char === '$') {
+          tokens.append(token);
+          token = new Token();
+          token.type = TOKEN_JS_GENERIC;
+          token.text = c.char;
+          token.row = c.row;
+          token.col = c.col;
+        } else {
+          token.text += c.char;
+        }
+        c = this.scanner.next();
+      }
+
+      else if (token.type === TOKEN_JS_LINE) {
+        if (c.char === '{') {
+          if (token.text === '') {
+            token.type = TOKEN_JS_EXPRESSION;
+          } else {
+            token.text += c.char;
+          }
+        }
+
+        else if (c.char === '\n') {
+          if (token.text.trim().startsWith('end')) {
+            token.type = TOKEN_JS_BLOCK_END;
+            tokens.append(token);
+          } else {
+            tokens.append(token);
+            token = new Token();
+            token.type = TOKEN_JS_NEWLINE;
+            token.text = '\n'
+            token.row = c.row;
+            token.char = c.char;
+            tokens.append(token);
+          }
+          token = new Token();
+        }
+
+        // TODO: Do we really need to deal with the ":" character here?
+        // See python reference implementation.
+        // else if (c.char === ':') {
+        // }
+
+        else {
+          token.text += c.char;
+        }
+
+        c = this.scanner.next();
+      }
+
+      else if (token.type === TOKEN_JS_EXPRESSION) {
+        if (c.char === '}') {
+          tokens.append(token);
+          token = new Token();
+          c = this.scanner.next();
+        } else {
+          token.text += c.char;
+          c = this.scanner.next();
+        }
+      }
+    }
+
+    if (token.type) {
+      tokens.append(token);
+    }
   }
 }
