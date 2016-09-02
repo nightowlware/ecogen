@@ -165,3 +165,34 @@ class Lexer {
     }
   }
 }
+
+
+class Generator {
+  constructor(lexer) {
+    this.lexer = lexer;
+  }
+
+  gen() {
+    let tokens = this.lexer.lex();
+    let output = '';
+
+    let Indenter = class {
+      constructor() {
+        this.value = 0;
+        this.text = '';
+      }
+
+      increase() {
+        this.value += 1;
+        this.text = ' '.repeat(this.value * 4);
+      }
+
+      decrease() {
+        this.value -= 1;
+        this.text = ' '.repeat(this.value * 4);
+      }
+    };
+
+    let indent = new Indenter();
+  }
+}
