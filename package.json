@@ -4,6 +4,8 @@
   "description": "Port of python ecogen.py to Node",
   "main": "test.js",
   "author": "Shafik",
-  "dependencies": {},
+  "dependencies": {
+    "repr.js": "^0.1.0"
+  },
   "devDependencies": {}
 }

@@ -44,19 +44,6 @@ class Scanner:
         return c
 
 
-
-# Here's some of the logic of the Lexer (this isn't a complete description BTW):
-#
-# As we are appending to a CHUNK, if a dollar sign '$' char comes up, then
-# we immediately end the CHUNK token and start a new token of type PYTHON_GENERIC.
-#
-# If the very next character is '{' then we promote the PYTHON_GENERIC token to
-# be a PYTHON_EXPRESSION token. Else, if the very next character '>' and the '$'
-# is at position col=0, then we promote the PYTHON_GENERIC token to be a PYTHON_LINE.
-# Otherwise, we domte the PYTHON_GENERIC token back to being just a CHUNK.
-#
-
-TOKEN_TYPE_PYTHON_GENERIC = "PYTHON_GENERIC"
 TOKEN_TYPE_PYTHON_LINE = "PYTHON_LINE"
 TOKEN_TYPE_PYTHON_COLON = "PYTHON_COLON"
 TOKEN_TYPE_PYTHON_NEWLINE = "PYTHON_NEWLINE"
@@ -88,7 +75,6 @@ class Lexer:
 
             #print c
 
-            # 'NEW' Token:
             if token.type == None:
                 if c.char == '$':
                     token.type = TOKEN_TYPE_PYTHON_LINE
@@ -100,20 +86,6 @@ class Lexer:
                 token.row = c.row
                 token.col = c.col
 
-            # CHUNK Token:
-            elif token.type == TOKEN_TYPE_CHUNK:
-                if c.char == '$':
-                    tokens.append(token)
-                    token = Token()
-                    token.type = TOKEN_TYPE_PYTHON_GENERIC
-                    token.text = c.char
-                    token.row = c.row
-                    token.col = c.col
-                else:
-                    token.text += c.char
-                c = self.scanner.next()
-
-            # PYTHON_LINE Token:
             elif token.type == TOKEN_TYPE_PYTHON_LINE:
                 if c.char == '{':
                     if token.text == '':
@@ -162,7 +134,6 @@ class Lexer:
                     token.text += c.char
                 c = self.scanner.next()
 
-            # PYTHON_EXPRESSION Token:
             elif token.type == TOKEN_TYPE_PYTHON_EXPRESSION:
                 if c.char == '}':
                     tokens.append(token)
@@ -172,7 +143,13 @@ class Lexer:
                     token.text += c.char
                     c = self.scanner.next()
 
-
+            elif token.type == TOKEN_TYPE_CHUNK:
+                if c.char == '$':
+                    tokens.append(token)
+                    token = Token()
+                else:
+                    token.text += c.char
+                    c = self.scanner.next()
 
         if token.type != None:
             tokens.append(token)
@@ -264,7 +241,6 @@ $    if a == 0: a = 5
 The value of d is: ${str(d)}
 I think that ${str(i)} is the meaning of life.
 Hello, my name is ${name} and I'm a person.
-I have $100 in my bank account.
 $ for i in range(a):
 loop index: ${str(i)}
 $  #thing: comment: {}

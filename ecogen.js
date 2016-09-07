@@ -1,6 +1,8 @@
 "use strict"
 
 
+let repr = require("repr.js").repr;
+
 function fatalError(msg, row, col) {
   console.error("ERROR: ", msg);
   console.error("ROW: ", row+1);
@@ -48,13 +50,13 @@ class Scanner {
 }
 
 
-TOKEN_JS_GENERIC = "JS_GENERIC"
-TOKEN_JS_LINE = "JS_LINE"
-TOKEN_JS_COLON = "JS_COLON"
-TOKEN_JS_NEWLINE = "JS_NEWLINE"
-TOKEN_JS_BLOCK_END = "JS_BLOCK_END"
-TOKEN_JS_EXPRESSION = "JS_EXPRESSION"
-TOKEN_JS_CHUNK = "CHUNK"
+const TOKEN_JS_GENERIC = "JS_GENERIC"
+const TOKEN_JS_LINE = "JS_LINE"
+const TOKEN_JS_COLON = "JS_COLON"
+const TOKEN_JS_NEWLINE = "JS_NEWLINE"
+const TOKEN_JS_BLOCK_END = "JS_BLOCK_END"
+const TOKEN_JS_EXPRESSION = "JS_EXPRESSION"
+const TOKEN_JS_CHUNK = "CHUNK"
 
 class Token {
   constructor() {
@@ -194,5 +196,61 @@ class Generator {
     };
 
     let indent = new Indenter();
+
+    for (let token of tokens) {
+      if (token.type === TOKEN_JS_CHUNK) {
+        output += indent.txt + `_out(repr(${token.text}));\n`;
+      }
+
+      else if (token.type === TOKEN_JS_LINE) {
+        if (token.text === "else") { indent.decrease(); }
+        output += indent.text + token.text;
+      }
+
+      // TODO: Skipping COLON just like we did in the lexer.
+
+      else if (token.type === TOKEN_JS_NEWLINE) {
+        output += '\n'
+      }
+
+      else if (token.type === TOKEN_JS_BLOCK_END) {
+        indent.decrease();
+        if (indent.value < 0) {
+          fatalError("Mismatched 'end' found.", token.row, token.col);
+        }
+      }
+
+      else if (token.type === TOKEN_JS_EXPRESSION) {
+        output += indent.text + `_out(${token.text});\n`;
+      }
+    }
+
+    let prefix = "function _out(text) { _output_text += text; }";
+    prefix += '\n';
+
+    return prefix + output;
   }
+}
+
+
+class Runner {
+  constructor(generator, env = {}) {
+    this.generator = generator;
+    this.env = env;
+  }
+
+  run() {
+    let code = this.generator.gen();
+    // console.log(code);
+
+    this.env._output_text = '';
+    eval(code);   // TODO: in this.env context!
+
+    return this.env._output_text;
+  }
+}
+
+
+function parse(source, env) {
+  return new Runner(new Generator(new Lexer(new Scanner(source))), env).run();
 }
