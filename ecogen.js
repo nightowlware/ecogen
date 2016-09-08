@@ -19,7 +19,7 @@ class Character {
   }
 
   toString() {
-    return `CHARACTER: char=${this.chr} row=${this.row} col=${this.col}`;
+    return `CHARACTER: char=${repr(this.chr)} row=${this.row} col=${this.col}`;
   }
 }
 
@@ -50,13 +50,12 @@ class Scanner {
 }
 
 
-const TOKEN_JS_GENERIC = "JS_GENERIC"
-const TOKEN_JS_LINE = "JS_LINE"
-const TOKEN_JS_COLON = "JS_COLON"
-const TOKEN_JS_NEWLINE = "JS_NEWLINE"
-const TOKEN_JS_BLOCK_END = "JS_BLOCK_END"
-const TOKEN_JS_EXPRESSION = "JS_EXPRESSION"
-const TOKEN_JS_CHUNK = "CHUNK"
+// "TJS" stands for "Tilde JS" and is a meta-language that is
+// very similar to JS, but not quite. All lines in this meta-language
+// must start with a tilde ("~").
+const TOKEN_TJS_LINE = "TJS_LINE"
+const TOKEN_TJS_EXPRESSION = "TJS_EXPRESSION"
+const TOKEN_CHUNK = "CHUNK"
 
 class Token {
   constructor() {
@@ -67,7 +66,7 @@ class Token {
   }
 
   toString() {
-    return `TOKEN type=${this.type}, text=${this.text}, row=${this.row}, col=${this.col}`;
+    return `TOKEN type=${this.type}, text=${repr(this.text)}, row=${this.row}, col=${this.col}`;
   }
 }
 
@@ -86,14 +85,14 @@ class Lexer {
     while (c) {
 
       if (!token.type) {
-        if (c.char === '$') {
-          token.type = TOKEN_JS_LINE;
+        if (c.char === '~') {
+          token.type = TOKEN_TJS_LINE;
           c = this.scanner.next();
           while (c.char === ' ') {
             c = this.scanner.next();
           }
         } else {
-          token.type = TOKEN_JS_CHUNK;
+          token.type = TOKEN_TJS_CHUNK;
         }
         token.row = c.row;
         token.col = c.col;
