@@ -1,5 +1,13 @@
 "use strict"
 
+// EcogenJS, inspired by Chris Anderson's "Elegant Code Generator (ecogen)":
+// A simple code generator that provides a surprisingly versatile meta-programming capability.
+//
+// The meta-language used is called "Tilde JS". It's a language that is quite similar to JS, but
+// not technically the same.
+// TODO: Add language spec/definition.
+// TODO: Add examples.
+
 
 let repr = require("repr.js").repr;
 
@@ -12,14 +20,14 @@ function fatalError(msg, row, col) {
 
 
 class Character {
-  constructor(chr, row, col) {
-    this.chr = chr;
+  constructor(char, row, col) {
+    this.char = char;
     this.row = row;
     this.col = col;
   }
 
   toString() {
-    return `CHARACTER: char=${repr(this.chr)} row=${this.row} col=${this.col}`;
+    return `CHARACTER: char=${repr(this.char)} row=${this.row} col=${this.col}`;
   }
 }
 
@@ -33,13 +41,13 @@ class Scanner {
   }
 
   next() {
-    if (this.index > text.length - 1) {
+    if (this.index > this.text.length - 1) {
       return null;
     }
 
     let c = new Character(this.text[this.index], this.row, this.col);
     this.index++;
-    if (c.chr == '\n') {
+    if (c.char == '\n') {
       this.row++;
       this.col = 0;
     }
@@ -92,55 +100,36 @@ class Lexer {
             c = this.scanner.next();
           }
         } else {
-          token.type = TOKEN_TJS_CHUNK;
+          token.type = TOKEN_CHUNK;
         }
         token.row = c.row;
         token.col = c.col;
       }
 
-      else if (token.type === TOKEN_JS_CHUNK) {
-        if (c.char === '$') {
-          tokens.append(token);
+      else if (token.type === TOKEN_CHUNK) {
+        if (c.char === '~') {
+          tokens.push(token);
           token = new Token();
-          token.type = TOKEN_JS_GENERIC;
-          token.text = c.char;
-          token.row = c.row;
-          token.col = c.col;
         } else {
           token.text += c.char;
+          c = this.scanner.next();
         }
-        c = this.scanner.next();
       }
 
-      else if (token.type === TOKEN_JS_LINE) {
+      else if (token.type === TOKEN_TJS_LINE) {
         if (c.char === '{') {
           if (token.text === '') {
-            token.type = TOKEN_JS_EXPRESSION;
+            token.type = TOKEN_TJS_EXPRESSION;
           } else {
             token.text += c.char;
           }
         }
 
         else if (c.char === '\n') {
-          if (token.text.trim().startsWith('end')) {
-            token.type = TOKEN_JS_BLOCK_END;
-            tokens.append(token);
-          } else {
-            tokens.append(token);
+            token.text += c.char;
+            tokens.push(token);
             token = new Token();
-            token.type = TOKEN_JS_NEWLINE;
-            token.text = '\n'
-            token.row = c.row;
-            token.char = c.char;
-            tokens.append(token);
-          }
-          token = new Token();
         }
-
-        // TODO: Do we really need to deal with the ":" character here?
-        // See python reference implementation.
-        // else if (c.char === ':') {
-        // }
 
         else {
           token.text += c.char;
@@ -149,21 +138,22 @@ class Lexer {
         c = this.scanner.next();
       }
 
-      else if (token.type === TOKEN_JS_EXPRESSION) {
+      else if (token.type === TOKEN_TJS_EXPRESSION) {
         if (c.char === '}') {
-          tokens.append(token);
+          tokens.push(token);
           token = new Token();
-          c = this.scanner.next();
         } else {
           token.text += c.char;
-          c = this.scanner.next();
         }
+        c = this.scanner.next();
       }
     }
 
     if (token.type) {
-      tokens.append(token);
+      tokens.push(token);
     }
+
+    return tokens;
   }
 }
 
@@ -177,50 +167,21 @@ class Generator {
     let tokens = this.lexer.lex();
     let output = '';
 
-    let Indenter = class {
-      constructor() {
-        this.value = 0;
-        this.text = '';
-      }
-
-      increase() {
-        this.value += 1;
-        this.text = ' '.repeat(this.value * 4);
-      }
-
-      decrease() {
-        this.value -= 1;
-        this.text = ' '.repeat(this.value * 4);
-      }
-    };
-
-    let indent = new Indenter();
-
     for (let token of tokens) {
-      if (token.type === TOKEN_JS_CHUNK) {
-        output += indent.txt + `_out(repr(${token.text}));\n`;
+      if (token.type === TOKEN_CHUNK) {
+        output += `_out(repr(${token.text}));\n`;
       }
 
-      else if (token.type === TOKEN_JS_LINE) {
-        if (token.text === "else") { indent.decrease(); }
-        output += indent.text + token.text;
+      else if (token.type === TOKEN_TJS_LINE) {
+        output += token.text;
       }
 
-      // TODO: Skipping COLON just like we did in the lexer.
-
-      else if (token.type === TOKEN_JS_NEWLINE) {
-        output += '\n'
+      else if (token.type === TOKEN_TJS_NEWLINE) {
+        output += '\n';
       }
 
-      else if (token.type === TOKEN_JS_BLOCK_END) {
-        indent.decrease();
-        if (indent.value < 0) {
-          fatalError("Mismatched 'end' found.", token.row, token.col);
-        }
-      }
-
-      else if (token.type === TOKEN_JS_EXPRESSION) {
-        output += indent.text + `_out(${token.text});\n`;
+      else if (token.type === TOKEN_TJS_EXPRESSION) {
+        output += `_out(${token.text});\n`;
       }
     }
 
@@ -240,7 +201,11 @@ class Runner {
 
   run() {
     let code = this.generator.gen();
-    // console.log(code);
+
+    // Turn on to debug generator
+    if (true) {
+      console.log(code);
+    }
 
     this.env._output_text = '';
     eval(code);   // TODO: in this.env context!
@@ -252,4 +217,33 @@ class Runner {
 
 function parse(source, env) {
   return new Runner(new Generator(new Lexer(new Scanner(source))), env).run();
+}
+
+
+
+// Test
+if (process.argv[2] === 'test') {
+  const input =
+`~for (let i = 0; i < 10; i++) {
+  console.log("test!");
+ ~}`;
+
+  let env = {};
+  env.name = "Shafik"
+  env.i = 42;
+
+  const s = new Scanner(input);
+  const l = new Lexer(s);
+  const g = new Generator(l);
+
+  // Turn on to debug tokenizer
+  if (false) {
+    const tokens = l.lex();
+    for (const token of tokens) {
+      console.log("token: ", token);
+      console.log("----------------------------------");
+    }
+  }
+
+  console.log(new Runner(g, env).run());
 }
