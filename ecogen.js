@@ -4,7 +4,7 @@
 // A simple code generator that provides a surprisingly versatile meta-programming capability.
 //
 // The meta-language used is called "Tilde JS". It's a language that is quite similar to JS, but
-// not technically the same.
+// not the same.
 // TODO: Add language spec/definition.
 // TODO: Add examples.
 
@@ -117,7 +117,7 @@ class Lexer {
       }
 
       else if (token.type === TOKEN_TJS_LINE) {
-        if (c.char === '{') {
+        if (c.char === '#') {
           if (token.text === '') {
             token.type = TOKEN_TJS_EXPRESSION;
           } else {
@@ -139,7 +139,7 @@ class Lexer {
       }
 
       else if (token.type === TOKEN_TJS_EXPRESSION) {
-        if (c.char === '}') {
+        if (c.char === '#') {
           tokens.push(token);
           token = new Token();
         } else {
@@ -169,15 +169,12 @@ class Generator {
 
     for (let token of tokens) {
       if (token.type === TOKEN_CHUNK) {
-        output += `_out(repr(${token.text}));\n`;
+        const text = token.text.replace(/\n/g, "\\n");
+        output += `_out(${repr(text)});`;
       }
 
       else if (token.type === TOKEN_TJS_LINE) {
         output += token.text;
-      }
-
-      else if (token.type === TOKEN_TJS_NEWLINE) {
-        output += '\n';
       }
 
       else if (token.type === TOKEN_TJS_EXPRESSION) {
@@ -185,32 +182,35 @@ class Generator {
       }
     }
 
-    let prefix = "function _out(text) { _output_text += text; }";
-    prefix += '\n';
-
-    return prefix + output;
+    return output;
   }
 }
 
 
 class Runner {
-  constructor(generator, env = {}) {
+  constructor(generator) {
     this.generator = generator;
-    this.env = env;
   }
 
   run() {
     let code = this.generator.gen();
 
     // Turn on to debug generator
-    if (true) {
+    if (false) {
       console.log(code);
+      console.log("------------------------------");
     }
 
-    this.env._output_text = '';
-    eval(code);   // TODO: in this.env context!
+    // TODO: It's unclear to me what context eval is evaling in here
+    let geval = eval;
+    geval("_output_text='';");
+    geval("function _out(text) { _output_text += text; }");
 
-    return this.env._output_text;
+    geval(code);
+
+    // See evals above
+    _output_text = _output_text.replace(/\\n/g, '\n');
+    return _output_text;
   }
 }
 
@@ -224,15 +224,40 @@ function parse(source, env) {
 // Test
 if (process.argv[2] === 'test') {
   const input =
-`~for (let i = 0; i < 10; i++) {
-  console.log("test!");
- ~}`;
+`
+~for (let i = 0; i < 5; i++) {
+  console.log(~#i#);
+  console.log('This is also a quoted string');
+~}
+`;
 
-  let env = {};
-  env.name = "Shafik"
-  env.i = 42;
+ const input2 =
+`
+~// This is a TJS comment
+~var i = 42;
+~          let a = 5;
+~let name = 'Shafik';
+~let d = [1,2,3];
+The value of d is: ~#d.toString()#
+I think that ~#new String(i)# is the meaning of life.
+Hello, my name is ~#name# and I am a person.
+~for (let i = 0; i < a; i++) {
+  loop index: ~#i#
+~}
+~ //thing: comment: ##
+~
+~let t = 7;
+~if (t < 4) {
+t is less than 4
+~} else if (t > 6) {
+t is greater than 6
+~}
+~else {
+t is 4, 5, or 6
+~}
+`;
 
-  const s = new Scanner(input);
+  const s = new Scanner(input2);
   const l = new Lexer(s);
   const g = new Generator(l);
 
@@ -245,5 +270,5 @@ if (process.argv[2] === 'test') {
     }
   }
 
-  console.log(new Runner(g, env).run());
+  console.log(new Runner(g, this).run());
 }
