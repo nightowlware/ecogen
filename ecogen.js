@@ -10,6 +10,7 @@
 
 
 let repr = require("repr.js").repr;
+let localeval = require("localeval");
 
 function fatalError(msg, row, col) {
   console.error("ERROR: ", msg);
@@ -188,8 +189,9 @@ class Generator {
 
 
 class Runner {
-  constructor(generator) {
+  constructor(generator, context={}) {
     this.generator = generator;
+    this.context = context;
   }
 
   run() {
@@ -201,16 +203,14 @@ class Runner {
       console.log("------------------------------");
     }
 
-    // TODO: It's unclear to me what context eval is evaling in here
-    let geval = eval;
-    geval("_output_text='';");
-    geval("function _out(text) { _output_text += text; }");
+    this.context._output_text = '';
+    this.context._out = (text) => { this.context._output_text += text; };
 
-    geval(code);
+    localeval(code, this.context);
 
     // See evals above
-    _output_text = _output_text.replace(/\\n/g, '\n');
-    return _output_text;
+    this.context._output_text = this.context._output_text.replace(/\\n/g, '\n');
+    return this.context._output_text;
   }
 }
 
@@ -260,9 +260,10 @@ t is 4, 5, or 6
   const expr="foo(baz(bar(3)))";
   const input3 =
 `
-~function foo(x) { return x/4; }
-~function bar(x) { return x*4; }
-~function baz(x) { return x+4; }
+~let k = 4;
+~function foo(x) { return x/k; }
+~function bar(x) { return x*k; }
+~function baz(x) { return x+k; }
 
 Result of ${expr}: ~#${expr}#
 `;
