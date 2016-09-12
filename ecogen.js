@@ -257,7 +257,17 @@ t is 4, 5, or 6
 ~}
 `;
 
-  const s = new Scanner(input2);
+  const expr="foo(baz(bar(3)))";
+  const input3 =
+`
+~function foo(x) { return x/4; }
+~function bar(x) { return x*4; }
+~function baz(x) { return x+4; }
+
+Result of ${expr}: ~#${expr}#
+`;
+
+  const s = new Scanner(input3);
   const l = new Lexer(s);
   const g = new Generator(l);
 
