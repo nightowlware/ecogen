@@ -9,7 +9,6 @@
 // TODO: Add examples.
 
 
-let repr = require("repr.js").repr;
 let localeval = require("localeval");
 
 function fatalError(msg, row, col) {
@@ -17,6 +16,17 @@ function fatalError(msg, row, col) {
   console.error("ROW: ", row+1);
   console.error("COL: ", col+1);
   process.exit(-1);
+}
+
+// Attempts to escape str such that
+// eval(evalEscape(str)) === str
+// TODO: Needs more testing to make sure it covers all scenarios.
+function evalEscape(str) {
+    str = str.replace(/\n/g, '\\n');
+    str = str.replace(/\"/g, '\\"');
+    str = str.replace(/\'/g, "\\'");
+
+    return '\'' + str + '\'';
 }
 
 
@@ -28,7 +38,7 @@ class Character {
   }
 
   toString() {
-    return `CHARACTER: char=${repr(this.char)} row=${this.row} col=${this.col}`;
+    return `CHARACTER: char=${evalEscape(this.char)} row=${this.row} col=${this.col}`;
   }
 }
 
@@ -75,7 +85,7 @@ class Token {
   }
 
   toString() {
-    return `TOKEN type=${this.type}, text=${repr(this.text)}, row=${this.row}, col=${this.col}`;
+    return `TOKEN type=${this.type}, text=${evalEscape(this.text)}, row=${this.row}, col=${this.col}`;
   }
 }
 
@@ -170,8 +180,7 @@ class Generator {
 
     for (let token of tokens) {
       if (token.type === TOKEN_CHUNK) {
-        const text = token.text.replace(/\n/g, "\\n");
-        output += `_out(${repr(text)});`;
+        output += `_out(${evalEscape(token.text)});`;
       }
 
       else if (token.type === TOKEN_TJS_LINE) {
@@ -209,7 +218,6 @@ class Runner {
     localeval(code, this.context);
 
     // See evals above
-    this.context._output_text = this.context._output_text.replace(/\\n/g, '\n');
     return this.context._output_text;
   }
 }
@@ -223,13 +231,22 @@ function parse(source, env) {
 
 // Test
 if (process.argv[2] === 'test') {
-  const input =
+  const input0 =
 `
 ~for (let i = 0; i < 5; i++) {
   console.log(~#i#);
   console.log('This is also a quoted string');
 ~}
 `;
+
+ const input1 =
+`
+~for (let i = 0; i < 5; i++) {
+  console.log("The value of i is:", ~#i#);
+  console.log('Another time:', ~#i#);
+~}
+`;
+
 
  const input2 =
 `
@@ -268,7 +285,7 @@ t is 4, 5, or 6
 Result of ${expr}: ~#${expr}#
 `;
 
-  const s = new Scanner(input3);
+  const s = new Scanner(input1);
   const l = new Lexer(s);
   const g = new Generator(l);
 

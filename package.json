@@ -5,8 +5,7 @@
   "main": "test.js",
   "author": "Shafik",
   "dependencies": {
-    "localeval": "^15.2.3",
-    "repr.js": "^0.1.0"
+    "localeval": "^15.2.3"
   },
   "devDependencies": {}
 }
