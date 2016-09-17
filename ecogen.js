@@ -290,7 +290,7 @@ Hello, my name is #|name|# and I am a person.
 ~for (let i = 0; i < a; i++) {
   loop index: #|i|#
 ~}
-~ //thing: comment: ##
+~ //thing: comment: #||#
 ~
 ~let t = 7;
 ~if (t < 4) {
