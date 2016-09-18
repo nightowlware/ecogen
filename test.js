@@ -1,3 +1,4 @@
+"use strict";
 let ecogen = require('./ecogen');
 
 
