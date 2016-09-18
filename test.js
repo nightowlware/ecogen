@@ -1,4 +1,4 @@
-ecogen = require('./ecogen');
+let ecogen = require('./ecogen');
 
 
 let scripts = [];
