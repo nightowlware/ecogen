@@ -1,8 +1,8 @@
 {
   "name": "ecogen.js",
-  "version": "0.0.1",
-  "description": "Port of python ecogen.py to Node",
-  "main": "test.js",
+  "version": "0.1.0",
+  "description": "Elegant Code Generator - A lightweight yet powerful templating engine",
+  "main": "ecogen.js",
   "author": "Shafik",
   "dependencies": {
     "localeval": "^15.2.3"
