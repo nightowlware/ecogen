@@ -23,6 +23,7 @@ function fatalError(msg, row, col) {
 // TODO: Needs more testing to make sure it covers all scenarios.
 function evalEscape(str) {
     str = str.replace(/\n/g, '\\n');
+    str = str.replace(/\r/g, '\\r');
     str = str.replace(/\"/g, '\\"');
     str = str.replace(/\'/g, "\\'");
 
