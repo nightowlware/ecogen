@@ -69,6 +69,6 @@ for (const script of scripts) {
     }
   }
 
-  console.log(new ecogen.Runner(g, this).run());
+  console.log(new ecogen.Runner(g).run());
   console.log("----------------------------------");
 }
