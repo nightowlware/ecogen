@@ -1,6 +1,6 @@
 {
   "name": "ecogen",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Elegant Code Generator - A lightweight yet powerful templating engine",
   "main": "ecogen.js",
   "author": "NightOwl",
