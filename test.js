@@ -52,6 +52,8 @@ scripts.push(
 
 Result of ${expr}: #|${expr}|#`);
 
+scripts.push(`\nSUCCESS\n`);
+
   // scripts = scripts.slice(0, 1);
   // scripts = [scripts[2]];
 
@@ -64,11 +66,11 @@ for (const script of scripts) {
   if (false) {
     const tokens = l.lex();
     for (const token of tokens) {
-      console.log("token: ", token);
       console.log("----------------------------------");
+      console.log("token: ", token);
     }
   }
 
-  console.log(new ecogen.Runner(g).run());
   console.log("----------------------------------");
+  console.log(new ecogen.Runner(g).run());
 }

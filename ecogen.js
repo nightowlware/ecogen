@@ -30,6 +30,11 @@ function evalEscape(str) {
     return '\'' + str + '\'';
 }
 
+// Windows users may be injecting some \r's so we strip them for code tokens:
+function stripCarriageReturns(text) {
+  return text.replace(/\r/g, '');
+}
+
 
 class Character {
   constructor(char, row, col) {
@@ -158,6 +163,7 @@ class Lexer {
 
       else if (token.type === TOKEN_TJS_LINE) {
         if (c.char === '\n') {
+          token.text = stripCarriageReturns(token.text);
           token.text += '    ' + token.debugData() + '\n';
           tokens.push(token);
           token = new Token();
