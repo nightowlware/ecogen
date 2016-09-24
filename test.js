@@ -56,32 +56,48 @@ scripts.push(
 `
 ~>
 let k = 5;
+let childData = ecogenRun("#| 42*3 |#");
 function foo(x) {
   return k * k + k;
 }
 ~<
 
-Result #|foo(k)|#`);
+Result: #|foo(k)|#
+Child Result: #|childData|#
+`);
 
+scripts.push(
+`
+~>
+let fs = require('fs');
+let str = ecogenRunFile('examples/child.t.txt').trim();
+~<
+
+Result: #| str |#
+`);
+
+
+// -------------------------
 scripts.push(`\nSUCCESS\n`);
 
   // scripts = scripts.slice(0, 1);
   // scripts = [scripts[2]];
 
 for (const script of scripts) {
-  const s = new ecogen.Scanner(script);
-  const l = new ecogen.Lexer(s);
-  const g = new ecogen.Generator(l);
-
-  // Turn on to debug tokenizer
-  if (false) {
-    const tokens = l.lex();
-    for (const token of tokens) {
-      console.log("----------------------------------");
-      console.log("token: ", token);
-    }
-  }
+  // const s = new ecogen.Scanner(script);
+  // const l = new ecogen.Lexer(s);
+  // const g = new ecogen.Generator(l);
+  //
+  // // Turn on to debug tokenizer
+  // if (false) {
+  //   const tokens = l.lex();
+  //   for (const token of tokens) {
+  //     console.log("----------------------------------");
+  //     console.log("token: ", token);
+  //   }
+  // }
 
   console.log("----------------------------------");
-  console.log(new ecogen.Runner(g).run());
+  // console.log(new ecogen.Runner(g).run());
+  console.log(ecogen.run(script));
 }

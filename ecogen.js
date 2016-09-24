@@ -10,6 +10,7 @@
 
 
 let localeval = require("localeval");
+let fs = require("fs");
 
 function fatalError(msg, row, col) {
   console.error("ERROR: ", msg);
@@ -275,8 +276,35 @@ class Runner {
 }
 
 
-function run(source, env) {
-  return new Runner(new Generator(new Lexer(new Scanner(source))), env).run();
+// Main entry point - runs the input template source code and returns
+// the output result.
+//
+// src: string - the template source code to evaluate.
+//
+// env: object - a custom environment for the code to evaluate against. Note that
+// the input env gets merged with a supplied "default context". See createDefaultContext() below.
+//
+// opts: object - options argument for things like debug output, etc.
+function run(src, env, opts={}) {
+  function createDefaultContext() {
+    function ecogenRun(srcChild, envChild, optsChild) {
+      return run(srcChild, Object.assign(createDefaultContext(), envChild), optsChild);
+    }
+
+    function ecogenRunFile(srcFile, envChild, optsChild) {
+      return ecogenRun(fs.readFileSync(srcFile, {encoding: "utf-8"}), envChild, optsChild);
+    }
+
+    return {
+      require,
+      ecogenRun,
+      ecogenRunFile
+    };
+  }
+
+  // Merge input env with default env
+  env = Object.assign(createDefaultContext(), env);
+  return new Runner(new Generator(new Lexer(new Scanner(src))), env).run();
 }
 
 

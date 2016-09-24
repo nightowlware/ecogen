@@ -1,0 +1,2 @@
+~ const grandchildText = "This is the Grandchild's text! -- ";
+#|grandchildText|#

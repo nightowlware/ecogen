@@ -3,6 +3,9 @@
   "version": "0.3.0",
   "description": "Elegant Code Generator - A lightweight yet powerful templating engine",
   "main": "ecogen.js",
+  "scripts": {
+    "test": "node test.js"
+  },
   "author": "NightOwl",
   "license": "ISC",
   "repository": {
