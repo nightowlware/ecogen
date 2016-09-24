@@ -1,4 +1,4 @@
-~ // This file must be run with "--context test.json" or "-c test.json"
+~ // This file must be run with "--context data.json" or "-c data.json"
 
 a is #|a|#
 b is #|b|#

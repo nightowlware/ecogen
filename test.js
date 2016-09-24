@@ -56,7 +56,7 @@ scripts.push(
 `
 ~>
 let k = 5;
-let childData = ecogenRun("#| 42*3 |#");
+let childData = ecogen.run("#| 42*3 |#");
 function foo(x) {
   return k * k + k;
 }
@@ -70,12 +70,22 @@ scripts.push(
 `
 ~>
 let fs = require('fs');
-let str = ecogenRunFile('examples/child.t.txt').trim();
+let str = ecogen.runFile('examples/child.t.txt').trim();
 ~<
 
 Result: #| str |#
 `);
 
+scripts.push(
+`
+~>
+let fs = require('fs');
+let str = ecogen.runFile('examples/injectcontext.t.js', 'examples/data.json').trim();
+~<
+
+Injected Result from json file:
+#|str|#
+`);
 
 // -------------------------
 scripts.push(`\nSUCCESS\n`);

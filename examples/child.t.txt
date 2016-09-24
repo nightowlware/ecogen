@@ -1,3 +1,3 @@
 ~ const prefix = "PREFIX --";
 ~ const childText = "This is the Child's text! --";
-#|prefix|# #|childText|# #|ecogenRunFile('examples/grandchild.t.txt').trim()|#
+#|prefix|# #|childText|# #|ecogen.runFile('examples/grandchild.t.txt').trim()|#

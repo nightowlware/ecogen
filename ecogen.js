@@ -282,31 +282,30 @@ class Runner {
 // src: string - the template source code to evaluate.
 //
 // env: object - a custom environment for the code to evaluate against. Note that
-// the input env gets merged with a supplied "default context". See createDefaultContext() below.
+// the input env gets merged with a supplied "default context". See defaultContext below.
 //
 // opts: object - options argument for things like debug output, etc.
 function run(src, env, opts={}) {
-  function createDefaultContext() {
-    function ecogenRun(srcChild, envChild, optsChild) {
-      return run(srcChild, Object.assign(createDefaultContext(), envChild), optsChild);
-    }
-
-    function ecogenRunFile(srcFile, envChild, optsChild) {
-      return ecogenRun(fs.readFileSync(srcFile, {encoding: "utf-8"}), envChild, optsChild);
-    }
-
-    return {
-      require,
-      ecogenRun,
-      ecogenRunFile
-    };
-  }
+  const defaultContext = {
+    require,
+    ecogen: module.exports
+  };
 
   // Merge input env with default env
-  env = Object.assign(createDefaultContext(), env);
+  env = Object.assign(defaultContext, env);
   return new Runner(new Generator(new Lexer(new Scanner(src))), env).run();
 }
 
+
+// Same as the vanilla "run()", but using files for both the src and env.
+// srcFile - filename of a TJS file to interpret
+// envFile - filename of a json file to inject into the environment
+function runFile(srcFile, envFile, opts) {
+  const src = fs.readFileSync(srcFile, {encoding: "utf-8"});
+  const env = envFile ? JSON.parse(fs.readFileSync(envFile)) : null;
+
+  return run(src, env);
+}
 
 
 // node module exports
@@ -315,5 +314,6 @@ module.exports = {
   Lexer,
   Generator,
   Runner,
-  run
+  run,
+  runFile
 }
