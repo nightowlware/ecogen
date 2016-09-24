@@ -84,10 +84,8 @@ class Scanner {
 }
 
 
-// "TJS" stands for "Tilde JS" and is a meta-language that is
-// very similar to JS, but not quite. All lines in this meta-language
-// must start with a tilde ("~").
 const TOKEN_TJS_LINE = "TJS_LINE"
+const TOKEN_TJS_BLOCK = "TJS_BLOCK"
 const TOKEN_TJS_EXPRESSION = "TJS_EXPRESSION"
 const TOKEN_CHUNK = "CHUNK"
 
@@ -104,7 +102,11 @@ class Token {
   }
 
   debugData() {
-    return `// --- TJS line ${this.row + 1}`;
+    if (this.type === TOKEN_TJS_BLOCK) {
+      return `// --- TJS Block starting at ${this.row + 1}`;
+    } else {
+      return `// --- TJS line ${this.row + 1}`;
+    }
   }
 }
 
@@ -124,17 +126,23 @@ class Lexer {
 
       if (token.type === TOKEN_CHUNK) {
         if (c.col === 0 && c.char === '~') {
-          if (token.text.length > 0) {
-            tokens.push(token);
-          }
-          token = new Token();
-          token.type = TOKEN_TJS_LINE;
-          token.row = c.row;
-          token.col = c.col;
+          if (this.scanner.peek() === '>') {
+            token = new Token();
+            token.type = TOKEN_TJS_BLOCK;
 
-          // Skip over the '~'
+            this.scanner.next();
+          } else {
+            if (token.text.length > 0) {
+              tokens.push(token);
+            }
+            token = new Token();
+            token.type = TOKEN_TJS_LINE;
+            token.row = c.row;
+            token.col = c.col;
+          }
+
           c = this.scanner.next();
-          // Consume white space
+
           while (c.char === ' ' || c.char === '\t') {
             c = this.scanner.next();
           }
@@ -167,6 +175,20 @@ class Lexer {
           token.text += '    ' + token.debugData() + '\n';
           tokens.push(token);
           token = new Token();
+        } else {
+          token.text += c.char;
+        }
+        c = this.scanner.next();
+      }
+
+      else if (token.type === TOKEN_TJS_BLOCK) {
+        if (c.char === '~' && this.scanner.peek() === '<') {
+          token.text = stripCarriageReturns(token.text);
+          token.text += '    ' + token.debugData() + '\n';
+          tokens.push(token);
+          token = new Token();
+
+          this.scanner.next();
         } else {
           token.text += c.char;
         }
@@ -206,11 +228,14 @@ class Generator {
     let output = '';
 
     for (let token of tokens) {
+      // Uncomment following line to debug tokenizer output
+      // console.log("token.type, token.text: ", `${token.type}, ${token.text}`);
+
       if (token.type === TOKEN_CHUNK) {
         output += `_out(${evalEscape(token.text)});`;
       }
 
-      else if (token.type === TOKEN_TJS_LINE) {
+      else if (token.type === TOKEN_TJS_LINE || token.type === TOKEN_TJS_BLOCK) {
         output += token.text;
       }
 

@@ -52,6 +52,17 @@ scripts.push(
 
 Result of ${expr}: #|${expr}|#`);
 
+scripts.push(
+`
+~>
+let k = 5;
+function foo(x) {
+  return k * k + k;
+}
+~<
+
+Result #|foo(k)|#`);
+
 scripts.push(`\nSUCCESS\n`);
 
   // scripts = scripts.slice(0, 1);
