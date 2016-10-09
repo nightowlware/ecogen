@@ -91,11 +91,11 @@ const TOKEN_TJS_EXPRESSION = "TJS_EXPRESSION"
 const TOKEN_CHUNK = "CHUNK"
 
 class Token {
-  constructor() {
-    this.type = TOKEN_CHUNK;
-    this.text = "";
-    this.row = 0;
-    this.col= 0;
+  constructor(type=TOKEN_CHUNK, text='', row=0, col=0) {
+    this.type = type;
+    this.text = text;
+    this.row = row;
+    this.col= col;
   }
 
   toString() {
@@ -128,18 +128,14 @@ class Lexer {
       if (token.type === TOKEN_CHUNK) {
         if (c.col === 0 && c.char === '~') {
           if (this.scanner.peek() === '>') {
-            token = new Token();
-            token.type = TOKEN_TJS_BLOCK;
+            token = new Token(TOKEN_TJS_BLOCK);
 
             this.scanner.next();
           } else {
             if (token.text.length > 0) {
               tokens.push(token);
             }
-            token = new Token();
-            token.type = TOKEN_TJS_LINE;
-            token.row = c.row;
-            token.col = c.col;
+            token = new Token(TOKEN_TJS_LINE, '', c.row, c.col);
           }
 
           c = this.scanner.next();
@@ -150,10 +146,7 @@ class Lexer {
         }
         else if (c.char === '#' && this.scanner.peek() === '|') {
           tokens.push(token);
-          token = new Token();
-          token.type = TOKEN_TJS_EXPRESSION;
-          token.row = c.row;
-          token.col = c.col;
+          token = new Token(TOKEN_TJS_EXPRESSION, '', c.row, c.col);
 
           // Skip over the '|'
           this.scanner.next();
