@@ -128,6 +128,9 @@ class Lexer {
       if (token.type === TOKEN_CHUNK) {
         if (c.col === 0 && c.char === '~') {
           if (this.scanner.peek() === '>') {
+            if (token.text.length > 0) {
+              tokens.push(token);
+            }
             token = new Token(TOKEN_TJS_BLOCK);
 
             this.scanner.next();
@@ -182,7 +185,11 @@ class Lexer {
           tokens.push(token);
           token = new Token();
 
-          this.scanner.next();
+          // Consume the "<" in "~<" and everything that comes after it till the end of the line:
+          let temp = c;
+          while (temp && temp.char !== '\n') {
+            temp = this.scanner.next();
+          }
         } else {
           token.text += c.char;
         }

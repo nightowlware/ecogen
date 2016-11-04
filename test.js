@@ -87,6 +87,16 @@ Injected Result from json file:
 #|str|#
 `);
 
+scripts.push(
+`
+This should be line #1
+~>
+let str = "sometstring"; let x = 4;
+~<
+This should be line #2
+Somestring: #|str|#
+`);
+
 // -------------------------
 scripts.push(`\nSUCCESS\n`);
 
