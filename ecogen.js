@@ -85,10 +85,13 @@ class Scanner {
 }
 
 
-const TOKEN_TJS_LINE = "TJS_LINE"
-const TOKEN_TJS_BLOCK = "TJS_BLOCK"
-const TOKEN_TJS_EXPRESSION = "TJS_EXPRESSION"
-const TOKEN_CHUNK = "CHUNK"
+const TOKEN_TJS_LINE = "TJS_LINE";
+const TOKEN_TJS_BLOCK = "TJS_BLOCK";
+const TOKEN_TJS_EXPRESSION = "TJS_EXPRESSION";
+const TOKEN_CHUNK = "CHUNK";
+
+const TILDE_BLOCK_SYM = "~-";
+const TILDE_LINE_SYM = TILDE_BLOCK_SYM[0];
 
 class Token {
   constructor(type=TOKEN_CHUNK, text='', row=0, col=0) {
@@ -126,8 +129,8 @@ class Lexer {
     while (c) {
 
       if (token.type === TOKEN_CHUNK) {
-        if (c.col === 0 && c.char === '~') {
-          if (this.scanner.peek() === '>') {
+        if (c.col === 0 && c.char === TILDE_LINE_SYM) {
+          if (this.scanner.peek() === TILDE_BLOCK_SYM[1]) {
             if (token.text.length > 0) {
               tokens.push(token);
             }
@@ -179,13 +182,13 @@ class Lexer {
       }
 
       else if (token.type === TOKEN_TJS_BLOCK) {
-        if (c.char === '~' && this.scanner.peek() === '<') {
+        if (c.char === TILDE_BLOCK_SYM[0] && this.scanner.peek() === TILDE_BLOCK_SYM[1]) {
           token.text = stripCarriageReturns(token.text);
           token.text += '    ' + token.debugData() + '\n';
           tokens.push(token);
           token = new Token();
 
-          // Consume the "<" in "~<" and everything that comes after it till the end of the line:
+          // Consume everything that comes after it till the end of the line:
           let temp = c;
           while (temp && temp.char !== '\n') {
             temp = this.scanner.next();
