@@ -78,10 +78,10 @@ Result: #| str |#
 
 scripts.push(
 `
-~-
+~-------------------------------
 let fs = require('fs');
 let str = ecogen.runFile('examples/injectcontext.t.js', 'examples/data.json').trim();
-~-
+~-------------------------------
 
 Injected Result from json file:
 #|str|#
@@ -90,9 +90,9 @@ Injected Result from json file:
 scripts.push(
 `
 This should be line #1
-~-
+~--------------------
 let str = "sometstring"; let x = 4;
-~-
+~-------------------------
 This should be line #2
 Somestring: #|str|#
 `);

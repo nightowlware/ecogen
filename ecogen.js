@@ -121,6 +121,11 @@ class Lexer {
   }
 
   lex() {
+
+    const consumeRestOfLine = () => {
+      while (this.scanner.next().char !== '\n') { }
+    };
+
     let tokens = [];
     let token = new Token();
 
@@ -135,8 +140,7 @@ class Lexer {
               tokens.push(token);
             }
             token = new Token(TOKEN_TJS_BLOCK);
-
-            this.scanner.next();
+            consumeRestOfLine();
           } else {
             if (token.text.length > 0) {
               tokens.push(token);
@@ -187,12 +191,7 @@ class Lexer {
           token.text += '    ' + token.debugData() + '\n';
           tokens.push(token);
           token = new Token();
-
-          // Consume everything that comes after it till the end of the line:
-          let temp = c;
-          while (temp && temp.char !== '\n') {
-            temp = this.scanner.next();
-          }
+          consumeRestOfLine();
         } else {
           token.text += c.char;
         }
@@ -201,8 +200,7 @@ class Lexer {
 
       else if (token.type === TOKEN_TJS_EXPRESSION) {
         if (c.char === '|' && this.scanner.peek() === '#') {
-          // We need to advance the scanner by one char at this point,
-          // in order to skip the closing '#'
+          // Skip over the '#'
           this.scanner.next();
           tokens.push(token);
           token = new Token();
