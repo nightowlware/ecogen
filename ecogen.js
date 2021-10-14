@@ -9,8 +9,8 @@
 // TODO: Add examples.
 
 
-let localeval = require("localeval");
-let fs = require("fs");
+const vm = require("vm");
+const fs = require("fs");
 
 function fatalError(msg, row, col) {
   console.error("ERROR: ", msg);
@@ -255,6 +255,7 @@ class Runner {
   constructor(generator, context={}) {
     this.generator = generator;
     this.context = context;
+    vm.createContext(this.context);
   }
 
   run() {
@@ -269,7 +270,7 @@ class Runner {
     this.context._output_text = '';
     this.context._out = (text) => { this.context._output_text += text; };
 
-    localeval(code, this.context);
+    vm.runInContext(code, this.context);
 
     // See evals above
     return this.context._output_text;

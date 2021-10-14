@@ -1,6 +1,6 @@
 {
   "name": "ecogen",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Elegant Code Generator - A lightweight yet powerful templating engine",
   "main": "ecogen.js",
   "scripts": {
@@ -11,9 +11,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nightowlware/ecogen.git"
-  },
-  "dependencies": {
-    "localeval": "^15.2.3"
-  },
-  "devDependencies": {}
+  }
 }
